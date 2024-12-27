@@ -3,6 +3,7 @@
 import { INIT_GAME, MESSAGE_TYPE } from "../types";
 import { WebSocket } from "ws";
 import { Game } from "./game";
+import { BLACK, WHITE } from "chess.js";
 
 export class GameManager {
     private pendingUser: WebSocket | null;
@@ -47,12 +48,18 @@ export class GameManager {
 
                         this.pendingUser.send(JSON.stringify({
                             type: INIT_GAME,
-                            data: "The game has been started"
+                            payload: {
+                                color: WHITE,
+                                message: 'You are white'
+                            }
                         }))
 
                         socket.send(JSON.stringify({
                             type: INIT_GAME,
-                            data: "The game has been started"
+                            payload: {
+                                color: BLACK,
+                                message: 'You are black'
+                            }
                         }))
 
                         this.pendingUser = null;
