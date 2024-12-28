@@ -1,165 +1,3 @@
-// "use client"
-// import { useSocket } from '@/hooks/useSocket'
-// import { DRAW, INIT_GAME, LOST, MESSAGE_TYPE, MOVE, WIN } from '@/types';
-// import { Chess, Square } from 'chess.js';
-// import React, { useEffect, useState } from 'react'
-// import { WHITE, BLACK } from 'chess.js';
-// import Image from 'next/image';
-
-// function Game() {
-
-//     const socket = useSocket();
-//     const [board, setBoard] = useState(new Chess());
-//     const [boardPosition, setBoardPosition] = useState(board.board());
-//     const [color, setColor] = useState(WHITE);
-//     const [gameStarted, setGameStarted] = useState<boolean>(false);
-//     const [availableSquares, setAvailableSquares] = useState<string[]>([]);
-//     const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
-
-//     useEffect(() => {
-
-//         console.log("I am inside useEffect hook")
-//         if(socket){
-//             socket.onmessage = (event) => {
-//                 // const data = JSON.parse(message.toString());
-//                 console.log("I am attaching to socket event");
-//                 console.log("The event is: ", event);
-
-//                 const message = JSON.parse(event.data) as MESSAGE_TYPE;
-
-//                 switch(message.type){
-//                     case INIT_GAME:
-//                         // Set the board
-//                         setBoard(new Chess());
-//                         console.log(message.payload.message);
-
-//                         // Set the color
-//                         if(message.payload.color === WHITE){
-//                             console.log("Setting color to white");
-//                             setColor(WHITE);
-//                         }else{
-//                             console.log("Setting color to black");
-//                             setColor(BLACK);
-//                         }
-
-//                         break;
-//                     case MOVE:
-//                         // Update the board using fen
-//                         board.move({
-//                             from: message.payload.from,
-//                             to: message.payload.to
-//                         })
-
-//                         setBoardPosition(board.board());
-//                         break;
-//                     case WIN:
-//                         console.log(message.payload);
-//                         break;
-//                     case LOST:
-//                         console.log(message.payload);
-//                         break;
-//                     case DRAW:
-//                         console.log(message.payload);
-//                         break;
-//                     default:
-//                         break;
-//                 }
-//             }
-//         }
-//     }, [socket]) 
-
-//     console.log(`The color is: ${color}`);
-
-//     const currentPosition = color === 'w' ? boardPosition : boardPosition.reverse();
-
-//     // console.log("The current position is here: ", currentPosition);
-
-//     const availableMoves = (col: any, squarePosition: string) => {
-
-//         if(!selectedSquare || col?.color != color){
-//             console.log("The condition is satisfied and returning from here.");
-//             setAvailableSquares([]);
-//             setSelectedSquare(null);
-
-//             return;
-//         }
-
-//         if(selectedSquare && col?.color != color){
-
-//             // console.log("Selected square is: ", selectedSquare);
-//             // console.log("Target square is: ", squarePosition);
-
-//             console.log("Making a move to the selected square", squarePosition);
-
-//             socket?.send(
-//                 JSON.stringify({
-//                     type: MOVE,
-//                     payload: {
-//                         from: selectedSquare,
-//                         to: squarePosition
-//                     }
-//                 })
-//             )
-
-//             setAvailableSquares([]);
-//             setSelectedSquare(null);
-//         }else{
-//             const possibleMoves = col?.square ? board.moves({ square: col?.square }) : [];
-//             // console.log(`Possible moves for ${col?.square} are: `, possibleMoves)
-//             setAvailableSquares(possibleMoves);
-//             setSelectedSquare(col?.square);
-//         }
-
-//         console.log("availble squares: ", availableSquares);
-//         console.log("selected square: ", selectedSquare);
-//     }
-
-//     if (!socket) return <div>Connecting...</div>
-
-//     if(!gameStarted){
-//         return (
-//             <div className='min-h-screen flex items-center justify-center bg-gray-100'>
-//                 <div className='w-[50vw] text-center'>
-//                     <button className='w-44 h-16 bg-green-400 text-3xl font-bold rounded-md' onClick={() => {
-//                         socket.send(JSON.stringify({ type: INIT_GAME, payload: "Start game" }));
-//                         setGameStarted(true);
-//                     }}>Start Game</button>
-//                 </div>
-//             </div>
-//         )
-//     }
-
-//     return (
-//         <div className='min-h-screen flex items-center justify-center bg-gray-100'>
-//             <div className='w-[50vw] text-center'>
-//                 {
-//                     currentPosition.map((row, rowIndex) => {
-//                         return (
-//                             <div key={rowIndex} className='flex'>
-//                             {
-//                                 row.map((col, colIndex) => {
-
-//                                     const squarePosition = `${String.fromCharCode(97 + colIndex)}${8 - rowIndex}`;
-//                                     const highlighted = availableSquares.includes(squarePosition);
-
-//                                     return (
-//                                         <div key={colIndex} onClick={() => availableMoves(col, squarePosition)} className={`w-14 h-14 flex items-center justify-center ${highlighted ? 'bg-yellow-200' : rowIndex % 2 === 0 ? colIndex % 2 == 0 ? 'bg-white' : 'bg-green-300' : colIndex % 2 === 0 ? 'bg-green-300' : 'bg-white'} ${col?.color === 'b' ? 'text-black' : 'text-white'}`}>
-//                                         {col?.type ? <Image src={`/chess-pieces/${col.color}-${col.type}.png`} alt={`${col.color}-${col.type}`} width={50} height={50} /> : ""}
-//                                         </div>
-//                                     )
-
-//                                 })
-//                             }
-//                             </div>
-//                         )
-//                     })
-//                 }
-//                 </div>
-//         </div>
-//     )
-// }
-
-// export default Game
 "use client";
 
 import { useSocket } from '@/hooks/useSocket';
@@ -245,6 +83,42 @@ function Game() {
         }
     };
 
+    const handleOnDrop = (e: React.DragEvent<HTMLDivElement>, squarePosition: string) => {
+        e.preventDefault();
+        const fromSquare = e.dataTransfer.getData("squarePosition");
+    
+        if (availableSquares.includes(squarePosition)) {
+            socket?.send(
+                JSON.stringify({
+                    type: MOVE,
+                    payload: {
+                        from: fromSquare,
+                        to: squarePosition,
+                    },
+                })
+            );
+            setAvailableSquares([]);
+            setSelectedSquare(null);
+        }
+    };
+    
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, squarePosition: string) => {
+        const piece = board.get(squarePosition as Square);
+    
+        if (piece && piece.color === color) {
+            e.dataTransfer.setData("squarePosition", squarePosition);
+            const moves = board.moves({ square: squarePosition as Square, verbose: true });
+            const targets = moves.map((move) => move.to);
+            setAvailableSquares(targets);
+            setSelectedSquare(squarePosition as Square);
+        }
+    };
+    
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+    };
+    
+
     if (!socket) return <div>Connecting...</div>;
 
     if (!gameStarted) {
@@ -309,6 +183,10 @@ function Game() {
                                     } ${
                                         (rowIndex + colIndex) % 2 === 0 ? "bg-green-300" : "bg-white"
                                     }`}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, squarePosition)}
+                                    onDrop={(e) => handleOnDrop(e, squarePosition)}
+                                    onDragOver={handleDragOver}
                                 >
                                     {col?.type && (
                                         <Image
