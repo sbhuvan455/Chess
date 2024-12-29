@@ -1,6 +1,6 @@
 import { Chess } from "chess.js";
 import { WebSocket } from "ws";
-import { DRAW, LOST, MESSAGE_TYPE, MOVE, MOVES, RESIGN, WIN } from "../types";
+import { DRAW, LOST, MESSAGE_TYPE, MOVE, MOVES, RESIGN, WIN, DISCONNECT } from "../types";
 
 
 // The Game Class
@@ -123,6 +123,31 @@ export class Game {
                     }else{
                         this.player1.send(JSON.stringify({
                             type: WIN,
+                            payload: "You won the game by Resignation"
+                        }))
+
+                        this.player2.send(JSON.stringify({
+                            type: LOST,
+                            payload: "You lost the game by Resignation"
+                        }))
+                    }
+                    break;
+
+                case DISCONNECT:
+
+                    if(this.player1 == socket){
+                        this.player1.send(JSON.stringify({
+                            type: LOST,
+                            payload: "You lost the game by Resignation"
+                        }))
+
+                        this.player2.send(JSON.stringify({
+                            type: WIN,
+                            payload: "You won the game by Resignation"
+                        }))
+                    }else{
+                        this.player1.send(JSON.stringify({
+                            type: WIN,
                             payload: "You won the game"
                         }))
 
@@ -131,6 +156,8 @@ export class Game {
                             payload: "You lost the game"
                         }))
                     }
+
+                    this.cleanup();
                     break;
             }
         })

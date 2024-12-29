@@ -21,6 +21,7 @@ export interface Result {
 }
 
 export const INIT_GAME = 'init_game';
+export const DISCONNECT = 'disconnect';
 export const MOVE = 'move';
 export const WIN = 'win';
 export const LOST = 'lost';

@@ -1,6 +1,7 @@
 // Creating a custom hook to handle socket connection
 "use client"
 
+import { DISCONNECT } from "@/types";
 import { useEffect, useState } from "react";
 
 
@@ -21,6 +22,11 @@ export const useSocket = (): WebSocket | null => {
         };
 
         return () => {
+            socket?.send(JSON.stringify({
+                type: DISCONNECT,
+                payload: {}
+            }))
+
             ws.close();
         };
 

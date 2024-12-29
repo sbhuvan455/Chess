@@ -1,6 +1,6 @@
 // Game manager for a multiplayer chess game
 
-import { INIT_GAME, MESSAGE_TYPE } from "../types";
+import { DISCONNECT, INIT_GAME, MESSAGE_TYPE } from "../types";
 import { WebSocket } from "ws";
 import { Game } from "./game";
 import { BLACK, WHITE } from "chess.js";
@@ -66,8 +66,15 @@ export class GameManager {
                     }
 
                     break;
-                default:
-                    console.log('Unknown message type');
+
+                case DISCONNECT:
+                    this.removeUser(socket);
+
+                    if(this.pendingUser === socket){
+                        this.pendingUser = null;
+                    }
+                    
+                    break;
             }
         })
     }

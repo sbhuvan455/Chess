@@ -1,17 +1,27 @@
-import React from 'react'
-// import { useRouter } from 'next/navigation'
-// import Chessboard from '@chrisoakman/chessboardjs'
 import Link from 'next/link'
+import Image from 'next/image'
 
-function page() {
-
-  // const router = useRouter()
-
+function Page() {
   return (
-    <div className='flex flex-col items-center justify-center h-screen'>
-      <Link href='/chessboard' className='w-44 h-16 bg-green-400 text-3xl font-bold mx-auto text-center flex justify-center rounded-md items-center'>Play</Link>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold mb-6">Welcome to Multiplayer Chess Game</h1>
+        <Image
+          src="/chessboard.png"
+          alt="Chessboard"
+          width={300}
+          height={300}
+          className="mx-auto mb-8"
+        />
+        <Link 
+          href="/game" 
+          className="bg-green-500 hover:bg-green-600 text-white text-2xl font-bold py-4 px-8 rounded-lg transition duration-300 ease-in-out transform hover:scale-105"
+        >
+          Play Now
+        </Link>
+      </div>
     </div>
   )
 }
 
-export default page
+export default Page

@@ -4,8 +4,8 @@ import { useSocket } from '@/hooks/useSocket';
 import { ChessMove, DRAW, INIT_GAME, LOST, MESSAGE_TYPE, MOVE, Result, WIN } from '@/types';
 import { Chess, Square } from 'chess.js';
 import React, { useEffect, useState } from 'react';
+import { Loader2, Flag } from 'lucide-react';
 import { WHITE, BLACK } from 'chess.js';
-import { Crown, Frown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
@@ -15,6 +15,7 @@ function Game() {
     const [board, setBoard] = useState(new Chess());
     const [color, setColor] = useState(WHITE);
     const [gameStarted, setGameStarted] = useState<boolean>(false);
+    const [isWaiting, setIsWaiting] = useState<boolean>(false);
     const [availableSquares, setAvailableSquares] = useState<string[]>([]);
     const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
     const [moves, setMoves] = useState<ChessMove[]>([]);
@@ -32,6 +33,8 @@ function Game() {
                     case INIT_GAME:
                         setBoard(new Chess());
                         setColor(message.payload.color === WHITE ? WHITE : BLACK);
+                        setGameStarted(true);
+                        setIsWaiting(false);
                         break;
 
                     case MOVE:
@@ -151,6 +154,13 @@ function Game() {
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
     };
+
+    const handleResign = () => {
+        socket?.send(JSON.stringify({
+            type: "resign",
+            payload: {}
+        }));
+    }
     
 
     if (!socket) return <div>Connecting...</div>;
@@ -160,15 +170,26 @@ function Game() {
             <div className="min-h-screen flex items-center justify-center bg-gray-100">
                 <div className="w-[50vw] text-center">
                     <button
-                        className="w-44 h-16 bg-green-400 text-3xl font-bold rounded-md"
+                        className="bg-green-500 hover:bg-green-600 text-white text-2xl font-bold py-4 px-8 rounded-lg transition duration-300 ease-in-out transform hover:scale-105"
                         onClick={() => {
                             socket.send(JSON.stringify({ type: INIT_GAME }));
                             setGameStarted(true);
+                            setIsWaiting(true);
                         }}
                     >
                         Start Game
                     </button>
                 </div>
+            </div>
+        );
+    }
+
+    if (isWaiting) {
+        return (
+            <div className="text-center">
+                <Loader2 className="w-16 h-16 text-indigo-500 animate-spin mx-auto mb-4" />
+                <p className="text-xl text-gray-700">Waiting for an opponent...</p>
+                <p className="text-sm text-gray-500 mt-2">This won't take long!</p>
             </div>
         );
     }
@@ -252,21 +273,29 @@ function Game() {
                         ))}
                     </div>
                 </div>
-                <div className="bg-zinc-700 text-zinc-200 p-4 rounded-lg w-full md:w-72 h-96 overflow-y-auto">
+                <div className="text-center bg-zinc-700 text-zinc-200 p-4 rounded-lg w-full md:w-72 h-96 overflow-y-auto">
                     <h2 className="text-lg font-bold mb-4 text-amber-100">Move History</h2>
                     <div className="space-y-2">
-                    {moves.length > 0 ? (
-                        moves.map((move, index) => (
-                        <div key={index} className="grid grid-cols-[2rem_1fr_1fr] gap-2 items-center text-sm bg-zinc-600 p-2 rounded">
-                            <span className="text-zinc-400">{move.moveNumber}.</span>
-                            <span className="font-mono">{move.from}</span>
-                            <span className="font-mono">{move.to}</span>
-                        </div>
-                        ))
-                    ) : (
-                        <p className="text-zinc-400 text-sm italic">No moves yet</p>
-                    )}
+                        {moves.length > 0 ? (
+                            moves.map((move, index) => (
+                            <div key={index} className="grid grid-cols-[2rem_1fr_1fr] gap-2 items-center text-sm bg-zinc-600 p-2 rounded">
+                                <span className="text-zinc-400">{move.moveNumber}.</span>
+                                <span className="font-mono">{move.from}</span>
+                                <span className="font-mono">{move.to}</span>
+                            </div>
+                            ))
+                        ) : (
+                            <p className="text-zinc-400 text-sm italic">No moves yet</p>
+                        )}
                     </div>
+                    <button
+                        onClick={handleResign}
+                        className="text-white flex items-center justify-center gap-1 text-center py-2 px-4 rounded transition duration-200 hover:text-red-500"
+                    >
+                        <Flag size={15}/>Resign
+                    </button>
+                    <div className="mt-8 w-full flex justify-center">
+                </div>
                 </div>
                 </div>
             </div>
