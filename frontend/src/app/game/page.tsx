@@ -1,10 +1,13 @@
 "use client";
 
 import { useSocket } from '@/hooks/useSocket';
-import { DRAW, INIT_GAME, LOST, MESSAGE_TYPE, MOVE, WIN } from '@/types';
+import { ChessMove, DRAW, INIT_GAME, LOST, MESSAGE_TYPE, MOVE, Result, WIN } from '@/types';
 import { Chess, Square } from 'chess.js';
 import React, { useEffect, useState } from 'react';
 import { WHITE, BLACK } from 'chess.js';
+import { Crown, Frown } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
 
 function Game() {
@@ -14,6 +17,11 @@ function Game() {
     const [gameStarted, setGameStarted] = useState<boolean>(false);
     const [availableSquares, setAvailableSquares] = useState<string[]>([]);
     const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
+    const [moves, setMoves] = useState<ChessMove[]>([]);
+    const [result, setResult] = useState<Result | null>(null);
+    // const [draggedSquare, setDraggedSquare] = useState<Square | null>(null);
+
+    const toast = useToast();
 
     useEffect(() => {
         if (socket) {
@@ -27,20 +35,42 @@ function Game() {
                         break;
 
                     case MOVE:
-                        const { after } = message.payload;
+                        const { after, from, to } = message.payload;
+                        const moveNumber = message.moveNumber
                         setBoard(new Chess(after));
+
+                        setMoves((prevMoves) => [
+                            ...prevMoves, 
+                            { moveNumber, from, to } as ChessMove
+                        ]);
+
                         break;
 
                     case WIN:
-                        alert(`You win! ${message.payload.reason}`);
+                        // alert(`You win! ${message.payload}`);
+                        setResult({ result: "win", message: message.payload });
+                        toast.toast({
+                            title: "You win! 🏆",
+                            description: message.payload,
+                        });
                         break;
 
                     case LOST:
-                        alert(`You lost! ${message.payload.reason}`);
+                        // alert(`You lost! ${message.payload}`);
+                        setResult({ result: "lost", message: message.payload });
+                        toast.toast({
+                            title: "You lost! 😢",
+                            description: message.payload,
+                        });
                         break;
 
                     case DRAW:
-                        alert("The game is a draw!");
+                        // alert("The game is a draw!");
+                        setResult({ result: "draw", message: message.payload });
+                        toast.toast({
+                            title: "The game is a draw! 🤝",
+                            description: message.payload,
+                        });
                         break;
 
                     default:
@@ -85,6 +115,7 @@ function Game() {
 
     const handleOnDrop = (e: React.DragEvent<HTMLDivElement>, squarePosition: string) => {
         e.preventDefault();
+        // setDraggedSquare(null);
         const fromSquare = e.dataTransfer.getData("squarePosition");
     
         if (availableSquares.includes(squarePosition)) {
@@ -104,6 +135,7 @@ function Game() {
     
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, squarePosition: string) => {
         const piece = board.get(squarePosition as Square);
+        // setDraggedSquare(squarePosition as Square);
     
         if (piece && piece.color === color) {
             e.dataTransfer.setData("squarePosition", squarePosition);
@@ -114,6 +146,8 @@ function Game() {
         }
     };
     
+    
+
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
     };
@@ -149,58 +183,92 @@ function Game() {
         : [...Array(8)].map((_, i) => String.fromCharCode(104 - i)); // Black's perspective: ['h', 'g', ..., 'a']
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="relative w-[50vw] text-center">
-                <div className="absolute -left-8 top-0 h-full flex flex-col justify-around">
-                    {ranks.map((rank) => (
-                        <div key={rank} className="h-14 flex items-center justify-center text-lg font-bold">
-                            {rank}
-                        </div>
-                    ))}
-                </div>
-                <div className="absolute bottom-0 -mb-8 w-full flex justify-around">
-                    {files.map((file) => (
-                        <div key={file} className="w-14 text-lg font-bold">
-                            {file}
-                        </div>
-                    ))}
-                </div>
-                {boardPosition.map((row, rowIndex) => (
-                    <div key={rowIndex} className="flex">
-                        {row.map((col, colIndex) => {
-                            const squarePosition =
-                                color === WHITE
-                                    ? `${String.fromCharCode(97 + colIndex)}${8 - rowIndex}`
-                                    : `${String.fromCharCode(97 + (colIndex))}${rowIndex + 1}`;
-                            const isHighlighted = availableSquares.includes(squarePosition);
+        <div className="min-h-screen bg-gradient-to-br from-zinc-800 to-zinc-900 p-4 md:p-8">
+            <Toaster />
+            <div className="max-w-7xl mx-auto">
+                <div className="flex flex-col md:flex-row items-center justify-center gap-8">
+                <div className="relative">
+                    <div className="border-8 border-amber-100 rounded-md overflow-hidden">
+                    <div className="grid grid-cols-8 gap-0">
 
-                            return (
+                        {boardPosition.map((row, rowIndex) => (
+                            row.map((col, colIndex) => {
+                                const squarePosition = color === WHITE
+                                ? `${String.fromCharCode(97 + colIndex)}${8 - rowIndex}`
+                                : `${String.fromCharCode(97 + colIndex)}${rowIndex + 1}`;
+                                const isHighlighted = availableSquares.includes(squarePosition);
+
+                                const resultHighlight = (result?.result === "win" || result?.result === "lost") && col?.type === 'k' 
+                                                        ? result.result === "win" 
+                                                            ? col.color === color 
+                                                                ? <span>👑</span> 
+                                                                : <span>🙁</span> 
+                                                            : col.color === color 
+                                                                ? <span>🙁</span>
+                                                                : <span>👑</span>
+                                                        : null;
+            
+                                return (
                                 <div
-                                    key={colIndex}
+                                    key={`${rowIndex}-${colIndex}`}
                                     onClick={() => handleMove(squarePosition)}
-                                    className={`w-14 h-14 flex items-center justify-center ${
-                                        isHighlighted ? "bg-yellow-200" : ""
-                                    } ${
-                                        (rowIndex + colIndex) % 2 === 0 ? "bg-green-300" : "bg-white"
-                                    }`}
+                                    className={`relative aspect-square flex items-center justify-center ${isHighlighted ? "ring-4 ring-yellow-300 z-10" : ""} ${(rowIndex + colIndex) % 2 !== 0 ? "bg-green-600" : "bg-amber-100"}
+                                                cursor-pointer transition-all duration-200 hover:opacity-80`}
                                     draggable
                                     onDragStart={(e) => handleDragStart(e, squarePosition)}
                                     onDrop={(e) => handleOnDrop(e, squarePosition)}
                                     onDragOver={handleDragOver}
                                 >
                                     {col?.type && (
-                                        <Image
-                                            src={`/chess-pieces/${col.color}-${col.type}.png`}
-                                            alt={`${col.color}-${col.type}`}
-                                            width={50}
-                                            height={50}
-                                        />
+                                    <Image
+                                        src={`/chess-pieces/${col.color}-${col.type}.png`}
+                                        alt={`${col.color}-${col.type}`}
+                                        width={50}
+                                        height={50}
+                                        className="w-3/4 h-3/4 object-contain"
+                                    />
+                                    )}
+                                    {resultHighlight && (
+                                        <div className="absolute top-0 right-0 text-xl">{resultHighlight}</div>
                                     )}
                                 </div>
-                            );
-                        })}
+                                );
+                            })
+                        ))}
                     </div>
-                ))}
+                    </div>
+                    <div className="absolute -left-8 top-0 h-full flex flex-col justify-around">
+                        {ranks.map((rank) => (
+                            <div key={rank} className="h-full flex items-center justify-center text-amber-100 text-sm font-bold">
+                            {rank}
+                            </div>
+                        ))}
+                    </div>
+                    <div className="absolute -bottom-8 left-0 w-full flex justify-around">
+                        {files.map((file) => (
+                            <div key={file} className="w-full text-center text-amber-100 text-sm font-bold">
+                            {file}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <div className="bg-zinc-700 text-zinc-200 p-4 rounded-lg w-full md:w-72 h-96 overflow-y-auto">
+                    <h2 className="text-lg font-bold mb-4 text-amber-100">Move History</h2>
+                    <div className="space-y-2">
+                    {moves.length > 0 ? (
+                        moves.map((move, index) => (
+                        <div key={index} className="grid grid-cols-[2rem_1fr_1fr] gap-2 items-center text-sm bg-zinc-600 p-2 rounded">
+                            <span className="text-zinc-400">{move.moveNumber}.</span>
+                            <span className="font-mono">{move.from}</span>
+                            <span className="font-mono">{move.to}</span>
+                        </div>
+                        ))
+                    ) : (
+                        <p className="text-zinc-400 text-sm italic">No moves yet</p>
+                    )}
+                    </div>
+                </div>
+                </div>
             </div>
         </div>
     );
