@@ -1,7 +1,8 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { GameManager } from './utils/gameManager';
 
-const wss = new WebSocketServer({ port: 8080 });
+// @ts-ignore
+const wss = new WebSocketServer({ port: process.env.PORT || 8080 });
 
 console.log("Hello world!");
 
