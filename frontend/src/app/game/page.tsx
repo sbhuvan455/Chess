@@ -30,6 +30,8 @@ function Game() {
         from: null,
         to: null,
     })
+
+    const audio = new Audio('/sound.mp3');
     // const [draggedSquare, setDraggedSquare] = useState<Square | null>(null);
 
     const toast = useToast();
@@ -75,6 +77,8 @@ function Game() {
                         const { after, from, to } = message.payload as Payload_Type;
                         const moveNumber = message.moveNumber
                         setBoard(new Chess(after));
+
+                        audio.play().catch((error) => console.log(error));
 
                         setLastMove({
                             from: from as string,
@@ -161,6 +165,8 @@ function Game() {
                 })
             );
 
+            audio.play().catch((error) => console.log(error));
+
             setLastMove({
                 from: selectedSquare,
                 to: squarePosition
@@ -189,20 +195,20 @@ function Game() {
     
         if (availableSquares.includes(squarePosition)) {
             if(canPromote) {
-                console.log("drag and promote");
+                // console.log("drag and promote");
 
                 setPromoteTo({
                     from: fromSquare,
                     to: squarePosition
                 })
 
-                console.log("1");
+                // console.log("1");
                 setDisplayPromoteOptions(true);
-                console.log("2");
+                // console.log("2");
                 setAvailableSquares([]);
-                console.log("3");
+                // console.log("3");
                 setSelectedSquare(null);
-                console.log("4");
+                // console.log("4");
 
                 return;
             }
@@ -216,6 +222,9 @@ function Game() {
                     },
                 })
             );
+
+            audio.play().catch((error) => console.log(error));
+
             setLastMove({
                 from: fromSquare,
                 to: squarePosition
@@ -266,6 +275,8 @@ function Game() {
                 })
             )
         }
+
+        audio.play().catch((error) => console.log(error));
 
         setLastMove({
             from: promoteTo.from,
