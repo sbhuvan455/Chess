@@ -1,6 +1,14 @@
+export interface Payload_Type {
+    message: string;
+    from?: string;
+    to?: string;
+    after?: string;
+    color?: string;
+}
+
 export interface MESSAGE_TYPE {
     type: string,
-    payload: any,
+    payload: Payload_Type | string,
     moveNumber?: number
 }
 

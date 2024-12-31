@@ -1,11 +1,12 @@
 // Creating a custom hook to handle socket connection
+
 "use client"
 
 import { DISCONNECT } from "@/types";
 import { useEffect, useState } from "react";
 
 
-const WS_URL = "ws://localhost:8080";
+const WS_URL = "https://chess-nkxr.onrender.com";
 
 export const useSocket = (): WebSocket | null => {
     const [socket, setSocket] = useState<WebSocket | null>(null);

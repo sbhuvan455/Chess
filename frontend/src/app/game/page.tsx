@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useSocket } from '@/hooks/useSocket';
-import { ChessMove, DRAW, INIT_GAME, LOST, MESSAGE_TYPE, MOVE, Result, WIN } from '@/types';
+import { ChessMove, DRAW, INIT_GAME, LOST, MESSAGE_TYPE, MOVE, Payload_Type, Result, WIN } from '@/types';
 import { Chess, Square } from 'chess.js';
 import React, { useEffect, useState } from 'react';
 import { Loader2, Flag } from 'lucide-react';
@@ -32,13 +33,14 @@ function Game() {
                 switch (message.type) {
                     case INIT_GAME:
                         setBoard(new Chess());
+                        // @ts-expect-error: The message.payload.color may not match the expected type
                         setColor(message.payload.color === WHITE ? WHITE : BLACK);
                         setGameStarted(true);
                         setIsWaiting(false);
                         break;
 
                     case MOVE:
-                        const { after, from, to } = message.payload;
+                        const { after, from, to } = message.payload as Payload_Type;
                         const moveNumber = message.moveNumber
                         setBoard(new Chess(after));
 
@@ -51,28 +53,28 @@ function Game() {
 
                     case WIN:
                         // alert(`You win! ${message.payload}`);
-                        setResult({ result: "win", message: message.payload });
+                        setResult({ result: "win", message: message.payload as string });
                         toast.toast({
                             title: "You win! 🏆",
-                            description: message.payload,
+                            description: message.payload as string,
                         });
                         break;
 
                     case LOST:
                         // alert(`You lost! ${message.payload}`);
-                        setResult({ result: "lost", message: message.payload });
+                        setResult({ result: "lost", message: message.payload as string });
                         toast.toast({
                             title: "You lost! 😢",
-                            description: message.payload,
+                            description: message.payload as string,
                         });
                         break;
 
                     case DRAW:
                         // alert("The game is a draw!");
-                        setResult({ result: "draw", message: message.payload });
+                        setResult({ result: "draw", message: message.payload as string });
                         toast.toast({
                             title: "The game is a draw! 🤝",
-                            description: message.payload,
+                            description: message.payload as string,
                         });
                         break;
 
@@ -189,7 +191,7 @@ function Game() {
             <div className="text-center">
                 <Loader2 className="w-16 h-16 text-indigo-500 animate-spin mx-auto mb-4" />
                 <p className="text-xl text-gray-700">Waiting for an opponent...</p>
-                <p className="text-sm text-gray-500 mt-2">This won't take long!</p>
+                <p className="text-sm text-gray-500 mt-2">This won&apos;t take long!</p>
             </div>
         );
     }

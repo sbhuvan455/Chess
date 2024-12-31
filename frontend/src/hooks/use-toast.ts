@@ -1,3 +1,4 @@
+
 "use client"
 
 // Inspired by react-hot-toast library
@@ -24,6 +25,14 @@ const actionTypes = {
   DISMISS_TOAST: "DISMISS_TOAST",
   REMOVE_TOAST: "REMOVE_TOAST",
 } as const
+
+function addAction(type: keyof typeof actionTypes) {
+  console.log(`Action type: ${type}`);
+}
+
+console.log(actionTypes.ADD_TOAST);
+
+addAction(actionTypes.ADD_TOAST)
 
 let count = 0
 
