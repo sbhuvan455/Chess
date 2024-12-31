@@ -26,6 +26,10 @@ function Game() {
         from: null,
         to: null,
     });
+    const [lastMove, setLastMove] = useState<Promote>({
+        from: null,
+        to: null,
+    })
     // const [draggedSquare, setDraggedSquare] = useState<Square | null>(null);
 
     const toast = useToast();
@@ -71,6 +75,11 @@ function Game() {
                         const { after, from, to } = message.payload as Payload_Type;
                         const moveNumber = message.moveNumber
                         setBoard(new Chess(after));
+
+                        setLastMove({
+                            from: from as string,
+                            to: to as string
+                        })
 
                         setMoves((prevMoves) => [
                             ...prevMoves, 
@@ -151,6 +160,11 @@ function Game() {
                     },
                 })
             );
+
+            setLastMove({
+                from: selectedSquare,
+                to: squarePosition
+            })
             setAvailableSquares([]);
             setSelectedSquare(null);
         } else if (piece && piece.color === color) {
@@ -202,6 +216,10 @@ function Game() {
                     },
                 })
             );
+            setLastMove({
+                from: fromSquare,
+                to: squarePosition
+            })
             setAvailableSquares([]);
             setSelectedSquare(null);
         }
@@ -248,6 +266,11 @@ function Game() {
                 })
             )
         }
+
+        setLastMove({
+            from: promoteTo.from,
+            to: promoteTo.to
+        })
 
         setPromoteTo({
             to: null,
@@ -324,13 +347,15 @@ function Game() {
                                                                 ? <span>🙁</span>
                                                                 : <span>👑</span>
                                                         : null;
+
+                                const isLastMovedSquare = squarePosition === lastMove.to || squarePosition === lastMove.from
             
                                 return (
                                 <div
                                     key={`${rowIndex}-${colIndex}`}
                                     onClick={() => handleMove(squarePosition)}
                                     className={`relative aspect-square flex items-center justify-center ${isHighlighted ? "ring-4 ring-yellow-300 z-10" : ""} ${(rowIndex + colIndex) % 2 !== 0 ? "bg-green-600" : "bg-amber-100"}
-                                                cursor-grabbing transition-all duration-200 hover:opacity-80`}
+                                                ${isLastMovedSquare ? "bg-yellow-300" : null} cursor-pointer transition-all duration-200 hover:opacity-80`}
                                     draggable
                                     onDragStart={(e) => handleDragStart(e, squarePosition)}
                                     onDrop={(e) => handleOnDrop(e, squarePosition)}
