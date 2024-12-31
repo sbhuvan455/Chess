@@ -2,8 +2,8 @@
 "use client";
 
 import { useSocket } from '@/hooks/useSocket';
-import { ChessMove, DRAW, INIT_GAME, LOST, MESSAGE_TYPE, MOVE, Payload_Type, Result, WIN } from '@/types';
-import { Chess, Square } from 'chess.js';
+import { ChessMove, DRAW, INIT_GAME, LOST, MESSAGE_TYPE, MOVE, Payload_Type, Promote, Result, WIN } from '@/types';
+import { Chess, PAWN, Square } from 'chess.js';
 import React, { useEffect, useState } from 'react';
 import { Loader2, Flag } from 'lucide-react';
 import { WHITE, BLACK } from 'chess.js';
@@ -21,9 +21,37 @@ function Game() {
     const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
     const [moves, setMoves] = useState<ChessMove[]>([]);
     const [result, setResult] = useState<Result | null>(null);
+    const [displayPromoteOptions, setDisplayPromoteOptions] = useState<boolean>(false);
+    const [promoteTo, setPromoteTo] = useState<Promote>({
+        from: null,
+        to: null,
+    });
     // const [draggedSquare, setDraggedSquare] = useState<Square | null>(null);
 
     const toast = useToast();
+
+    const promote = [
+        {
+            id: 1,
+            type: 'q',
+            source: `/chess-pieces/${color}-q.png`
+        },
+        {
+            id: 2,
+            type: 'r',
+            source: `/chess-pieces/${color}-r.png`
+        },
+        {
+            id: 3,
+            type: 'n',
+            source: `/chess-pieces/${color}-n.png`
+        },
+        {
+            id: 4,
+            type: 'b',
+            source: `/chess-pieces/${color}-b.png`
+        }
+    ]
 
     useEffect(() => {
         if (socket) {
@@ -94,8 +122,26 @@ function Game() {
     const handleMove = (squarePosition: string) => {
         const piece = board.get(squarePosition as Square);
 
+        // console.log(type + " " + color + " " + squarePosition)
+
+        // const canPromote = (color === WHITE && squarePosition[1] === '8' && type === PAWN) || (color === BLACK && squarePosition[1] === '1' && type === PAWN);
+
         // Allow movement only if the piece matches the player's color
         if (selectedSquare && availableSquares.includes(squarePosition)) {
+            const canPromote = (color === WHITE && squarePosition[1] === '8' && board.get(selectedSquare).type === PAWN) || (color === BLACK && squarePosition[1] === '1' && board.get(selectedSquare).type === PAWN);
+            if(canPromote){
+                setPromoteTo({
+                    from: selectedSquare,
+                    to: squarePosition
+                })
+
+                setDisplayPromoteOptions(true);
+                setAvailableSquares([]);
+                setSelectedSquare(null);
+
+                return;
+            }
+
             socket?.send(
                 JSON.stringify({
                     type: MOVE,
@@ -122,8 +168,31 @@ function Game() {
         e.preventDefault();
         // setDraggedSquare(null);
         const fromSquare = e.dataTransfer.getData("squarePosition");
+
+        // console.log(type + " " + color + " " + squarePosition)
+
+        const canPromote = (color === WHITE && squarePosition[1] === '8' && board.get(fromSquare as Square).type === PAWN) || (color === BLACK && squarePosition[1] === '1' && board.get(fromSquare as Square).type === PAWN);
     
         if (availableSquares.includes(squarePosition)) {
+            if(canPromote) {
+                console.log("drag and promote");
+
+                setPromoteTo({
+                    from: fromSquare,
+                    to: squarePosition
+                })
+
+                console.log("1");
+                setDisplayPromoteOptions(true);
+                console.log("2");
+                setAvailableSquares([]);
+                console.log("3");
+                setSelectedSquare(null);
+                console.log("4");
+
+                return;
+            }
+
             socket?.send(
                 JSON.stringify({
                     type: MOVE,
@@ -162,6 +231,31 @@ function Game() {
             type: "resign",
             payload: {}
         }));
+    }
+
+    const handlePromote = (type: string) => {
+        setDisplayPromoteOptions(false);
+
+        if(promoteTo.from && promoteTo.to){
+            socket?.send(
+                JSON.stringify({
+                    type: MOVE,
+                    payload: {
+                        from: promoteTo.from,
+                        to: promoteTo.to,
+                        promotion: type
+                    }
+                })
+            )
+        }
+
+        setPromoteTo({
+            to: null,
+            from: null,
+        })
+
+        setAvailableSquares([]);
+        setSelectedSquare(null);
     }
     
 
@@ -236,7 +330,7 @@ function Game() {
                                     key={`${rowIndex}-${colIndex}`}
                                     onClick={() => handleMove(squarePosition)}
                                     className={`relative aspect-square flex items-center justify-center ${isHighlighted ? "ring-4 ring-yellow-300 z-10" : ""} ${(rowIndex + colIndex) % 2 !== 0 ? "bg-green-600" : "bg-amber-100"}
-                                                cursor-pointer transition-all duration-200 hover:opacity-80`}
+                                                cursor-grabbing transition-all duration-200 hover:opacity-80`}
                                     draggable
                                     onDragStart={(e) => handleDragStart(e, squarePosition)}
                                     onDrop={(e) => handleOnDrop(e, squarePosition)}
@@ -259,6 +353,23 @@ function Game() {
                             })
                         ))}
                     </div>
+                    {displayPromoteOptions &&
+                        <div className='absolute bottom-2 flex items-center bg-white'>
+                            {promote.map((piece) => {
+                                return (
+                                    <div key={piece.id} className='text-center p-2 cursor-pointer' onClick={() => handlePromote(piece.type)}>
+                                        <Image
+                                            src={piece.source}
+                                            alt='promote'
+                                            width={50}
+                                            height={50}
+                                            className="w-3/4 h-3/4 object-contain"
+                                        />
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    }
                     </div>
                     <div className="absolute -left-8 top-0 h-full flex flex-col justify-around">
                         {ranks.map((rank) => (

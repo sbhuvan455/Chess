@@ -1,9 +1,16 @@
+import { Square } from "chess.js";
+
 export interface Payload_Type {
     message: string;
     from?: string;
     to?: string;
     after?: string;
     color?: string;
+}
+
+export interface Promote {
+    from: string | null;
+    to: string | null;
 }
 
 export interface MESSAGE_TYPE {
