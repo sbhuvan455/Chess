@@ -30,8 +30,9 @@ function Game() {
         from: null,
         to: null,
     })
+    const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
 
-    const audio = new Audio('/sound.mp3');
+    // const audio = new Audio('/sound.mp3');
     // const [draggedSquare, setDraggedSquare] = useState<Square | null>(null);
 
     const toast = useToast();
@@ -60,6 +61,9 @@ function Game() {
     ]
 
     useEffect(() => {
+
+        setAudio(new Audio('/sound.mp3'));
+
         if (socket) {
             socket.onmessage = (event) => {
                 const message = JSON.parse(event.data) as MESSAGE_TYPE;
@@ -78,7 +82,7 @@ function Game() {
                         const moveNumber = message.moveNumber
                         setBoard(new Chess(after));
 
-                        audio.play().catch((error) => console.log(error));
+                        audio?.play().catch((error) => console.log(error));
 
                         setLastMove({
                             from: from as string,
@@ -165,7 +169,7 @@ function Game() {
                 })
             );
 
-            audio.play().catch((error) => console.log(error));
+            audio?.play().catch((error) => console.log(error));
 
             setLastMove({
                 from: selectedSquare,
@@ -223,7 +227,7 @@ function Game() {
                 })
             );
 
-            audio.play().catch((error) => console.log(error));
+            audio?.play().catch((error) => console.log(error));
 
             setLastMove({
                 from: fromSquare,
@@ -276,7 +280,7 @@ function Game() {
             )
         }
 
-        audio.play().catch((error) => console.log(error));
+        audio?.play().catch((error) => console.log(error));
 
         setLastMove({
             from: promoteTo.from,
